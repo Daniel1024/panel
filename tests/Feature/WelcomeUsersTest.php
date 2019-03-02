@@ -17,7 +17,7 @@ class WelcomeUsersTest extends TestCase
 
     /** @test */
     function it_welcomes_users_without_nickname(){
-        $this->get('saludo/Daniel')
+        $this->get('saludo/daniel')
             ->assertOk()
             ->assertSee('Bienvenido Daniel, no tienes apodo');
     }
