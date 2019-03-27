@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\{
-    Http\Requests\CreateUserRequest, User, UserProfile
+    Http\Requests\CreateUserRequest, Profession, Skill, User, UserProfile
 };
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,14 +13,9 @@ class UserController extends Controller
 {
     public function index()
     {
-        //$users = DB::table('users')->get();
         $users = User::all();
 
         $title = 'Listado de usuarios';
-
-//        return view('users.index')
-//            ->with('users', User::all())
-//            ->with('title', 'Listado de usuarios');
 
         return view('users.index', compact('title', 'users'));
     }
@@ -32,7 +27,9 @@ class UserController extends Controller
 
     public function create()
     {
-        return view('users.create');
+        $user = new User;
+
+        return view('users.create', compact('user'));
     }
 
     public function store(CreateUserRequest $request)
@@ -44,7 +41,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return view('users.edit', ['user' => $user]);
+        return view('users.edit', compact('user'));
     }
 
     public function update(User $user)
