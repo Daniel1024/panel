@@ -2,20 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\{
-    Http\Requests\CreateUserRequest, Profession, Skill, User, UserProfile
-};
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\{
+    Http\Requests\UpdateUserRequest, Profession, Skill, User
+};
+use App\Http\Requests\CreateUserRequest;
 
 class UserController extends Controller
 {
     public function index()
     {
-        $users = User::all();
+        $users = User::orderByDesc('created_at')->simplePaginate();
 
         $title = 'Listado de usuarios';
+
+        return view('users.index', compact('title', 'users'));
+    }
+
+    public function trashed()
+    {
+        $users = User::onlyTrashed()->get();
+
+        $title = 'Listado de usuarios en papelera';
 
         return view('users.index', compact('title', 'users'));
     }
@@ -27,9 +35,7 @@ class UserController extends Controller
 
     public function create()
     {
-        $user = new User;
-
-        return view('users.create', compact('user'));
+        return $this->form('users.create', new User);
     }
 
     public function store(CreateUserRequest $request)
@@ -41,32 +47,40 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        return $this->form('users.edit', $user);
     }
 
-    public function update(User $user)
+    protected function form($view, User $user)
     {
-        $data = request()->validate([
-            'name' => 'required',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => '',
+        return view($view, [
+            'professions' => Profession::orderBy('title', 'ASC')->get(),
+            'skills' => Skill::orderBy('name', 'ASC')->get(),
+            'roles' => trans('users.roles'),
+            'user' => $user,
         ]);
+    }
 
-        if ($data['password'] != null) {
-            $data['password'] = bcrypt($data['password']);
-        } else {
-            unset($data['password']);
-        }
-
-        $user->update($data);
+    public function update(UpdateUserRequest $request, User $user)
+    {
+        $request->updateUser($user);
 
         return redirect()->route('users.show', ['user' => $user]);
     }
 
-    function destroy(User $user)
+    public function trash(User $user)
     {
         $user->delete();
+        $user->profile()->delete();
 
         return redirect()->route('users.index');
+    }
+
+    public function destroy($id)
+    {
+        $user = User::onlyTrashed()->where('id', $id)->firstOrFail();
+
+        $user->forceDelete();
+
+        return redirect()->route('users.trashed');
     }
 }

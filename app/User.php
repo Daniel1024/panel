@@ -3,11 +3,13 @@
 namespace App;
 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
+    use SoftDeletes;
+
     //protected $table = 'users';
 
     use Notifiable;
@@ -17,9 +19,12 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $fillable = [
-        'name', 'email', 'password',
-    ];
+    protected $guarded = [];
+
+    public function getPerPage()
+    {
+        return parent::getPerPage() * 2;
+    }
 
     /**
      * The attributes that should be hidden for arrays.
@@ -51,9 +56,7 @@ class User extends Authenticatable
 
     public function profile()
     {
-        return $this->hasOne(UserProfile::class)->withDefault([
-            'bio' => 'Programador'
-        ]);
+        return $this->hasOne(UserProfile::class)->withDefault();
     }
 
     public function isAdmin()
