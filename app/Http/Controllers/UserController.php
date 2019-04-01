@@ -2,26 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Validation\Rule;
-use App\{
-    Http\Requests\UpdateUserRequest, Profession, Skill, User
-};
-use App\Http\Requests\CreateUserRequest;
+use App\{Profession, Skill, User};
+use App\Http\Requests\{CreateUserRequest, UpdateUserRequest};
 
 class UserController extends Controller
 {
     public function index()
     {
-        $users = User::orderByDesc('created_at')->simplePaginate();
+        $users = User::query()
+            ->with('team')
+            ->search(request('search'))
+            ->orderByDesc('created_at')
+            ->paginate();
 
         $title = 'Listado de usuarios';
 
         return view('users.index', compact('title', 'users'));
     }
 
+
+
+
+
+
+
+
+
     public function trashed()
     {
-        $users = User::onlyTrashed()->get();
+        $users = User::onlyTrashed()->paginate();
 
         $title = 'Listado de usuarios en papelera';
 

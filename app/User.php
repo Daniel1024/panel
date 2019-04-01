@@ -8,29 +8,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use SoftDeletes;
+    use Notifiable, SoftDeletes;
 
-    //protected $table = 'users';
-
-    use Notifiable;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $guarded = [];
 
-    public function getPerPage()
-    {
-        return parent::getPerPage() * 2;
-    }
-
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
     protected $hidden = [
         'password', 'remember_token',
     ];
@@ -44,9 +25,9 @@ class User extends Authenticatable
         return static::where(compact('email'))->first();
     }
 
-    public function profession()
+    public function team()
     {
-        return $this->belongsTo(Profession::class);
+        return $this->belongsTo(Team::class)->withDefault();
     }
 
     public function skills()
@@ -62,5 +43,18 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    public function scopeSearch($query, $search)
+    {
+        if (empty ($search)) {
+            return;
+        }
+
+        $query->where('name', 'like', "%{$search}%")
+            ->orWhere('email', 'like', "%{$search}%")
+            ->orWhereHas('team', function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            });
     }
 }
