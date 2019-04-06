@@ -17,12 +17,18 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        //
+        'active' => 'bool',
     ];
 
-    public static function findByEmail($email)
+    /**
+     * Create a new Eloquent query builder for the model.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder|static
+     */
+    public function newEloquentBuilder($query)
     {
-        return static::where(compact('email'))->first();
+        return new UserQuery($query);
     }
 
     public function team()
@@ -45,16 +51,20 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
-    public function scopeSearch($query, $search)
+    public function scopeFilterBy($query, QueryFilter $filters, array $data)
     {
-        if (empty ($search)) {
-            return;
-        }
+        return $filters->applyTo($query, $data);
+    }
 
-        $query->where('name', 'like', "%{$search}%")
-            ->orWhere('email', 'like', "%{$search}%")
-            ->orWhereHas('team', function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%");
-            });
+    public function setStateAttribute($value)
+    {
+        $this->attributes['active'] = $value == 'active';
+    }
+
+    public function getStateAttribute()
+    {
+        if ($this->active !== null) {
+            return $this->active ? 'active' : 'inactive';
+        }
     }
 }

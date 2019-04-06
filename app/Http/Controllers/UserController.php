@@ -2,39 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\{Profession, Skill, User};
+use App\{
+    Profession, Skill, User, UserFilter
+};
 use App\Http\Requests\{CreateUserRequest, UpdateUserRequest};
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request, UserFilter $filters)
     {
         $users = User::query()
-            ->with('team')
-            ->search(request('search'))
+            ->with('team', 'skills', 'profile.profession')
+            ->filterBy($filters, $request->only(['state', 'role', 'search', 'skills', 'from', 'to']))
             ->orderByDesc('created_at')
             ->paginate();
 
-        $title = 'Listado de usuarios';
+        $users->appends($filters->valid());
 
-        return view('users.index', compact('title', 'users'));
+        return view('users.index', [
+            'view' => 'index',
+            'users' => $users,
+            'skills' => Skill::orderBy('name')->get(),
+            'checkedSkills' => collect(request('skills')),
+        ]);
     }
-
-
-
-
-
-
-
-
 
     public function trashed()
     {
         $users = User::onlyTrashed()->paginate();
 
-        $title = 'Listado de usuarios en papelera';
-
-        return view('users.index', compact('title', 'users'));
+        return view('users.index', [
+            'users' => $users,
+            'view' => 'trash',
+        ]);
     }
 
     public function show(User $user)
@@ -64,7 +65,6 @@ class UserController extends Controller
         return view($view, [
             'professions' => Profession::orderBy('title', 'ASC')->get(),
             'skills' => Skill::orderBy('name', 'ASC')->get(),
-            'roles' => trans('users.roles'),
             'user' => $user,
         ]);
     }

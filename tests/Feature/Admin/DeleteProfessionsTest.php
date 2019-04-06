@@ -2,10 +2,8 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Profession;
-use App\UserProfile;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
+use App\{Profession, User, UserProfile};
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class DeleteProfessionsTest extends TestCase
@@ -31,7 +29,8 @@ class DeleteProfessionsTest extends TestCase
 
         $profession = factory(Profession::class)->create();
 
-        $profile = factory(UserProfile::class)->create([
+        $user = factory(User::class)->create();
+        $user->profile->update([
             'profession_id' => $profession->id,
         ]);
 

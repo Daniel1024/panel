@@ -3,7 +3,6 @@
 namespace Tests\Feature\Admin;
 
 use App\User;
-use App\UserProfile;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -15,10 +14,6 @@ class DeleteUsersTest extends TestCase
     function it_sends_a_user_to_the_trash()
     {
         $user = factory(User::class)->create();
-
-        factory(UserProfile::class)->create([
-            'user_id' => $user->id,
-        ]);
 
         $this->patch("usuarios/{$user->id}/papelera")
             ->assertRedirect('usuarios');
@@ -45,10 +40,6 @@ class DeleteUsersTest extends TestCase
             'deleted_at' => now()
         ]);
 
-        factory(UserProfile::class)->create([
-            'user_id' => $user->id,
-        ]);
-
         $this->delete("usuarios/{$user->id}")
             ->assertRedirect('usuarios/papelera');
 
@@ -62,10 +53,6 @@ class DeleteUsersTest extends TestCase
 
         $user = factory(User::class)->create([
             'deleted_at' => null,
-        ]);
-
-        factory(UserProfile::class)->create([
-            'user_id' => $user->id,
         ]);
 
         $this->delete("usuarios/{$user->id}")
